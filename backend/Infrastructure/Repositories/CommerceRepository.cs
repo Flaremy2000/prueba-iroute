@@ -9,9 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IRoute.Infrastructure.Repositories;
 
 /// <summary>
-/// Carga y procesamiento mediante los stored procedures de SQL Server.
-/// La consulta de cuarentena es portable porque usa LINQ sobre EF Core;
-/// estas dos operaciones dependen del TVP y de los SPs T-SQL del reto.
+/// Carga y procesa mediante los stored procedures de SQL Server; la consulta usa EF Core.
 /// </summary>
 public sealed class CommerceRepository(CommerceDbContext dbContext) : ICommerceRepository
 {

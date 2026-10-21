@@ -1,12 +1,26 @@
 using IRoute.Api.Middleware;
 using IRoute.Application;
 using IRoute.Infrastructure;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi("v1", options =>
+{
+    options.AddDocumentTransformer((document, _, _) =>
+    {
+        document.Info = new OpenApiInfo
+        {
+            Title = "i-Route Commerce API",
+            Version = "v1",
+            Description = "Carga, procesamiento y consulta de comercios desde archivos CSV."
+        };
+
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
