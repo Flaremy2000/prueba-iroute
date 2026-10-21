@@ -1,8 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
-import { PagedResult, ProcessResult, QuarantineItem, UploadResult } from './models';
+import { environment } from '../../../environments/environment';
+import { PagedResult, ProcessResult, QuarantineItem, UploadResult } from '../models';
 
 export interface QuarantineFilters {
   processDate?: string;

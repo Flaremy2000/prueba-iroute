@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ProblemDetails } from './models';
+import { ProblemDetails } from '../models';
 
 export function problemMessage(error: unknown, fallback: string): string {
   if (!(error instanceof HttpErrorResponse)) {

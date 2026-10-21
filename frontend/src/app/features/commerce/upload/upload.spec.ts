@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { CommerceService } from '../../../core/commerce.service';
+import { CommerceService } from '../../../core/commerce';
 import { UploadPage } from './upload';
 
 describe('UploadPage', () => {
@@ -42,12 +42,13 @@ describe('UploadPage', () => {
     expect(commerce.upload).not.toHaveBeenCalled();
   });
 
-  it('clears the selected file', () => {
+  it('clears the selected file and preview', () => {
     component.selectFile(new File(['data'], 'commerce_01112026.csv'));
     component.removeFile();
 
     expect(component.selectedFile()).toBeNull();
     expect(component.fileDate()).toBeNull();
+    expect(component.preview()).toBeNull();
     expect(component.result()).toBeNull();
   });
 
@@ -99,5 +100,18 @@ describe('UploadPage', () => {
 
     expect(component.fileSize()).not.toBe('');
     expect(component.formatDate(component.fileDate())).toContain('2026');
+  });
+
+  it('generates a preview when a valid file is selected', async () => {
+    const csvContent = `pc_nomcomred,pc_numdoc,pc_processdate\nComercio Alfa,1001,2026-11-01`;
+    const file = new File([csvContent], 'commerce_01112026.csv', { type: 'text/csv' });
+
+    component.selectFile(file);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(component.preview()).not.toBeNull();
+    expect(component.preview()?.rows.length).toBe(1);
+    expect(component.preview()?.rows[0].merchantName).toBe('Comercio Alfa');
   });
 });

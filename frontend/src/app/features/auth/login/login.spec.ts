@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { AuthService } from '../../../core/auth.service';
+import { AuthService } from '../../../core/auth';
 import { LoginPage } from './login';
 
 describe('LoginPage', () => {

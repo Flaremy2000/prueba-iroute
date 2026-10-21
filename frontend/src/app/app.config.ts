@@ -5,7 +5,7 @@ import {
   withInMemoryScrolling
 } from '@angular/router';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
-import { authInterceptor } from './core/auth.interceptor';
+import { authInterceptor } from './core/auth';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {

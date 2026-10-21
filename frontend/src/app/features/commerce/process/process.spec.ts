@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { CommerceService } from '../../../core/commerce.service';
+import { CommerceService } from '../../../core/commerce';
 import { ProcessPage } from './process';
 
 describe('ProcessPage', () => {

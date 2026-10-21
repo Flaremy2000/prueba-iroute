@@ -97,6 +97,54 @@
               </button>
             </div>
 
+            @if (preview(); as csvPreview) {
+              <div class="mt-5 border-t border-slate-200 pt-4">
+                <div class="flex items-center justify-between gap-2 pb-2.5">
+                  <div class="flex items-center gap-2">
+                    <svg viewBox="0 0 24 24" class="h-4 w-4 text-cyan-600" fill="none" aria-hidden="true">
+                      <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke="currentColor" stroke-width="1.8" />
+                      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                    </svg>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-700">
+                      Previsualización del archivo
+                    </p>
+                  </div>
+                  <span class="rounded bg-slate-200/70 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                    Muestra de {{ csvPreview.totalSampled }} filas
+                  </span>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+                  <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-600 font-semibold">
+                      <tr>
+                        <th scope="col" class="px-3.5 py-2.5">Comercio (pc_nomcomred)</th>
+                        <th scope="col" class="px-3.5 py-2.5">Documento (pc_numdoc)</th>
+                        <th scope="col" class="px-3.5 py-2.5">Fecha proceso (pc_processdate)</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                      @for (row of csvPreview.rows; track $index) {
+                        <tr class="hover:bg-slate-50/80">
+                          <td class="max-w-[14rem] truncate px-3.5 py-2 font-medium text-slate-900">
+                            {{ row.merchantName || '—' }}
+                          </td>
+                          <td class="whitespace-nowrap px-3.5 py-2 font-mono text-slate-600">
+                            {{ row.documentNumber || '—' }}
+                          </td>
+                          <td class="whitespace-nowrap px-3.5 py-2 text-slate-600">
+                            {{ row.processDate || '—' }}
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                <p class="mt-2 text-[11px] text-slate-400">
+                  Previsualización generada en el navegador antes de enviar los datos al servidor.
+                </p>
+              </div>
+            }
+
             <div class="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p class="flex items-center gap-2 text-xs text-slate-500">
                 <svg viewBox="0 0 24 24" class="h-4 w-4 text-emerald-600" fill="none" aria-hidden="true">
