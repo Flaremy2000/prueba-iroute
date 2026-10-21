@@ -28,6 +28,25 @@ public sealed class GlobalExceptionHandlerTests
     }
 
     [Fact]
+    public async Task TryHandleAsync_ConflictException_ReturnsProblemDetails409()
+    {
+        var context = CreateContext();
+        var handler = new GlobalExceptionHandler(NullLogger<GlobalExceptionHandler>.Instance);
+
+        var handled = await handler.TryHandleAsync(
+            context,
+            new DomainConflictException("El archivo ya fue cargado."),
+            CancellationToken.None);
+
+        Assert.True(handled);
+        Assert.Equal(StatusCodes.Status409Conflict, context.Response.StatusCode);
+        var problem = await ReadProblemAsync(context);
+        Assert.Equal(409, problem.Status);
+        Assert.Equal("Conflicto", problem.Title);
+        Assert.Equal("El archivo ya fue cargado.", problem.Detail);
+    }
+
+    [Fact]
     public async Task TryHandleAsync_UnexpectedException_ReturnsGenericProblemDetails500()
     {
         var context = CreateContext();

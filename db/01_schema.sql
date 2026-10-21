@@ -36,6 +36,23 @@ BEGIN
 END;
 GO
 
+IF OBJECT_ID(N'dbo.commerce_uploads', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.commerce_uploads
+    (
+        id             BIGINT IDENTITY(1,1) NOT NULL,
+        file_name      NVARCHAR(255) NOT NULL,
+        content_hash   CHAR(64)      NOT NULL,
+        process_date   DATE          NOT NULL,
+        rows_inserted  INT           NOT NULL,
+        uploaded_at    DATETIME2(0)  NOT NULL
+            CONSTRAINT DF_commerce_uploads_uploaded_at DEFAULT (SYSUTCDATETIME()),
+        CONSTRAINT PK_commerce_uploads PRIMARY KEY CLUSTERED (id),
+        CONSTRAINT UQ_commerce_uploads_content_hash UNIQUE (content_hash)
+    );
+END;
+GO
+
 IF NOT EXISTS
 (
     SELECT 1

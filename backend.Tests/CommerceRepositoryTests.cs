@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using IRoute.Application.Quarantine;
 using IRoute.Domain.Entities;
 using IRoute.Infrastructure.Persistence;
@@ -52,8 +54,27 @@ public sealed class CommerceRepositoryTests
                 }
             };
 
-            var inserted = await repository.CreateAsync(records, CancellationToken.None);
-            Assert.Equal(3, inserted);
+            var contentHash = Convert.ToHexString(
+                SHA256.HashData(Encoding.UTF8.GetBytes(Guid.NewGuid().ToString("N"))))
+                .ToLowerInvariant();
+
+            var inserted = await repository.CreateAsync(
+                records,
+                "commerce_02012099.csv",
+                contentHash,
+                date,
+                CancellationToken.None);
+            Assert.False(inserted.Duplicate);
+            Assert.Equal(3, inserted.Inserted);
+
+            var duplicate = await repository.CreateAsync(
+                records,
+                "commerce_02012099-copia.csv",
+                contentHash,
+                date,
+                CancellationToken.None);
+            Assert.True(duplicate.Duplicate);
+            Assert.Equal(0, duplicate.Inserted);
 
             var counts = await repository.ProcessAsync(date, CancellationToken.None);
             Assert.Equal(2, counts.Quarantined);
@@ -108,5 +129,7 @@ public sealed class CommerceRepositoryTests
             $"DELETE FROM dbo.commerce WHERE pc_processdate = {date}");
         await db.Database.ExecuteSqlInterpolatedAsync(
             $"DELETE FROM dbo.commerce_quarantine WHERE pc_processdate = {date}");
+        await db.Database.ExecuteSqlInterpolatedAsync(
+            $"DELETE FROM dbo.commerce_uploads WHERE process_date = {date}");
     }
 }

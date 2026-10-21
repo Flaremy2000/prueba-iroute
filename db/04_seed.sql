@@ -11,6 +11,7 @@ GO
 
 TRUNCATE TABLE dbo.commerce_quarantine;
 TRUNCATE TABLE dbo.commerce;
+TRUNCATE TABLE dbo.commerce_uploads;
 GO
 
 INSERT INTO dbo.commerce (pc_nomcomred, pc_numdoc, pc_processdate)

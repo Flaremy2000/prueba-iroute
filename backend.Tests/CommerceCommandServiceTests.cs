@@ -8,6 +8,8 @@ namespace IRoute.Tests;
 
 public sealed class CommerceCommandServiceTests
 {
+    private const string ContentHash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
     private readonly FakeCsvParser _parser = new();
     private readonly FakeCommerceRepository _repository = new();
 
@@ -80,7 +82,7 @@ public sealed class CommerceCommandServiceTests
     public async Task UploadAsync_NoRecords_Throws()
     {
         var service = CreateService();
-        _parser.Result = new CsvParseResult([]);
+        _parser.Result = new CsvParseResult([], ContentHash);
 
         var exception = await Assert.ThrowsAsync<DomainValidationException>(
             () => service.UploadAsync(
@@ -102,7 +104,7 @@ public sealed class CommerceCommandServiceTests
                 DocumentNumber = "12345678",
                 ProcessDate = new DateOnly(2026, 11, 3)
             }
-        ]);
+        ], ContentHash);
 
         var exception = await Assert.ThrowsAsync<DomainValidationException>(
             () => service.UploadAsync(
@@ -125,7 +127,7 @@ public sealed class CommerceCommandServiceTests
                 DocumentNumber = "12345678",
                 ProcessDate = new DateOnly(2026, 11, 1)
             }
-        ]);
+        ], ContentHash);
         _repository.Inserted = 1;
 
         var result = await service.UploadAsync(
@@ -138,6 +140,32 @@ public sealed class CommerceCommandServiceTests
         Assert.Equal(1, result.RowsInserted);
         Assert.NotNull(_repository.LastRecords);
         Assert.Single(_repository.LastRecords);
+        Assert.Equal("commerce_01112026.csv", _repository.LastFileName);
+        Assert.Equal(ContentHash, _repository.LastContentHash);
+        Assert.Equal(new DateOnly(2026, 11, 1), _repository.LastUploadProcessDate);
+    }
+
+    [Fact]
+    public async Task UploadAsync_DuplicateFile_ThrowsConflict()
+    {
+        var service = CreateService();
+        _parser.Result = new CsvParseResult(
+        [
+            new CommerceRecord
+            {
+                MerchantName = "Comercio Uno",
+                DocumentNumber = "12345678",
+                ProcessDate = new DateOnly(2026, 11, 1)
+            }
+        ], ContentHash);
+        _repository.Duplicate = true;
+
+        var exception = await Assert.ThrowsAsync<DomainConflictException>(
+            () => service.UploadAsync(
+                new UploadCommerceCommand(new MemoryStream([1]), "commerce_01112026.csv"),
+                CancellationToken.None));
+
+        Assert.Contains("ya fue cargado", exception.Message);
     }
 
     [Fact]
@@ -173,7 +201,7 @@ public sealed class CommerceCommandServiceTests
 
     private sealed class FakeCsvParser : ICsvCommerceParser
     {
-        public CsvParseResult Result { get; set; } = new([]);
+        public CsvParseResult Result { get; set; } = new([], ContentHash);
 
         public Task<CsvParseResult> ParseAsync(Stream content, CancellationToken cancellationToken) =>
             Task.FromResult(Result);
@@ -182,16 +210,27 @@ public sealed class CommerceCommandServiceTests
     private sealed class FakeCommerceRepository : ICommerceRepository
     {
         public int Inserted { get; set; }
+        public bool Duplicate { get; set; }
         public ProcessCounts Counts { get; set; } = new(0, 0);
         public IReadOnlyCollection<CommerceRecord>? LastRecords { get; private set; }
+        public string? LastFileName { get; private set; }
+        public string? LastContentHash { get; private set; }
+        public DateOnly? LastUploadProcessDate { get; private set; }
         public DateOnly? LastProcessDate { get; private set; }
 
-        public Task<int> CreateAsync(
+        public Task<UploadInsertResult> CreateAsync(
             IReadOnlyCollection<CommerceRecord> records,
+            string fileName,
+            string contentHash,
+            DateOnly processDate,
             CancellationToken cancellationToken)
         {
             LastRecords = records;
-            return Task.FromResult(Inserted);
+            LastFileName = fileName;
+            LastContentHash = contentHash;
+            LastUploadProcessDate = processDate;
+
+            return Task.FromResult(new UploadInsertResult(Inserted, Duplicate));
         }
 
         public Task<ProcessCounts> ProcessAsync(

@@ -1,8 +1,10 @@
+using System.Text;
 using IRoute.Application.Abstractions;
 using IRoute.Infrastructure.Csv;
 using IRoute.Infrastructure.Database;
 using IRoute.Infrastructure.Persistence;
 using IRoute.Infrastructure.Repositories;
+using IRoute.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +27,23 @@ public static class DependencyInjection
             .Validate(
                 options => Enum.IsDefined(options.Provider),
                 "Database:Provider no es válido.")
+            .ValidateOnStart();
+
+        services
+            .AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.Issuer),
+                "Jwt:Issuer es obligatorio.")
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.Audience),
+                "Jwt:Audience es obligatorio.")
+            .Validate(
+                options => Encoding.UTF8.GetByteCount(options.Key) >= 32,
+                "Jwt:Key debe tener al menos 32 bytes.")
+            .Validate(
+                options => options.ExpirationMinutes is >= 1 and <= 1440,
+                "Jwt:ExpirationMinutes debe estar entre 1 y 1440.")
             .ValidateOnStart();
 
         services.AddDbContextPool<CommerceDbContext>((provider, options) =>
@@ -64,6 +83,9 @@ public static class DependencyInjection
         services.AddScoped<ICsvCommerceParser, CsvCommerceParser>();
         services.AddScoped<ICommerceRepository, CommerceRepository>();
         services.AddScoped<IQuarantineRepository, QuarantineRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
+        services.AddSingleton<ITokenService, JwtTokenService>();
 
         return services;
     }

@@ -9,6 +9,7 @@ param(
 $ErrorActionPreference = "Stop"
 $script:Passes = 0
 $script:Failures = 0
+$script:Token = $null
 $root = $PSScriptRoot
 
 function Write-Pass {
@@ -63,7 +64,12 @@ function Assert-Detail {
 }
 
 function Invoke-Curl {
-    param([string[]]$CurlArgs)
+    param([string[]]$CurlArgs, [switch]$NoAuth)
+
+    if (-not $NoAuth -and $script:Token) {
+        $CurlArgs = @("-H", "Authorization: Bearer $script:Token") + $CurlArgs
+    }
+
     $output = & curl.exe -s -w "`n%{http_code}" @CurlArgs
     $text = ($output | Out-String).Trim()
 
@@ -116,6 +122,36 @@ function Invoke-Get {
     Invoke-Curl -CurlArgs @("$BaseUrl/api/commerce/quarantine?$Query")
 }
 
+function Invoke-LoginRequest {
+    param([string]$Username, [string]$Password)
+
+    $path = Join-Path $env:TEMP ("iroute-login-" + [Guid]::NewGuid().ToString("N") + ".json")
+    $json = @{ username = $Username; password = $Password } | ConvertTo-Json -Compress
+
+    try {
+        [IO.File]::WriteAllText($path, $json, [Text.UTF8Encoding]::new($false))
+        Invoke-Curl -NoAuth -CurlArgs @(
+            "-X", "POST", "$BaseUrl/api/auth/login",
+            "-H", "Content-Type: application/json",
+            "--data-binary", "@$path"
+        )
+    }
+    finally {
+        Remove-Item -LiteralPath $path -ErrorAction SilentlyContinue
+    }
+}
+
+function Invoke-Login {
+    $response = Invoke-LoginRequest -Username "admin" -Password "Admin123!"
+
+    if ($response.Status -ne 200 -or -not $response.Json.accessToken) {
+        throw "No se pudo iniciar sesión. Status=$($response.Status). Body=$($response.Body)"
+    }
+
+    $script:Token = $response.Json.accessToken
+    Write-Pass "login success"
+}
+
 function Reset-TestData {
     if ($SkipReset) {
         Write-Host "SKIP  limpieza de datos (-SkipReset)" -ForegroundColor Yellow
@@ -126,6 +162,7 @@ function Reset-TestData {
 SET NOCOUNT ON;
 DELETE FROM dbo.commerce WHERE pc_processdate BETWEEN '2026-11-01' AND '2026-11-09';
 DELETE FROM dbo.commerce_quarantine WHERE pc_processdate BETWEEN '2026-11-01' AND '2026-11-09';
+DELETE FROM dbo.commerce_uploads WHERE process_date BETWEEN '2026-11-01' AND '2026-11-09';
 "@
 
     $output = & sqlcmd -S $SqlServer -d $Database -E -C -b -Q $query 2>&1
@@ -137,7 +174,7 @@ DELETE FROM dbo.commerce_quarantine WHERE pc_processdate BETWEEN '2026-11-01' AN
 }
 
 function Assert-ApiAvailable {
-    $response = Invoke-Get "page=1&pageSize=1"
+    $response = Invoke-Curl -NoAuth -CurlArgs @("$BaseUrl/openapi/v1.json")
     if ($response.Status -ne 200) {
         throw "La API no responde en $BaseUrl. Status=$($response.Status). Body=$($response.Body)"
     }
@@ -149,6 +186,15 @@ try {
     Reset-TestData
     Assert-ApiAvailable
 
+    $r = Invoke-LoginRequest -Username "admin" -Password "incorrecta"
+    Assert-Status $r 400 "login invalid credentials"
+    Assert-Detail $r "Usuario o contraseña inválidos." "login invalid credentials detail"
+
+    Invoke-Login
+
+    $r = Invoke-Curl -NoAuth -CurlArgs @("$BaseUrl/api/commerce/quarantine?page=1&pageSize=1")
+    Assert-Status $r 401 "commerce requires authentication"
+
     # ------------------------------------------------------------------
     # 1. Éxito total
     # ------------------------------------------------------------------
@@ -156,6 +202,10 @@ try {
     Assert-Status $r 200 "upload success"
     Assert-Json $r.Json "rowsRead" 4 "upload success rowsRead"
     Assert-Json $r.Json "rowsInserted" 4 "upload success rowsInserted"
+
+    $r = Invoke-Upload (Join-Path $root "upload\success\commerce_01112026.csv")
+    Assert-Status $r 409 "upload duplicate"
+    Assert-Detail $r "El archivo ya fue cargado. No se insertaron registros duplicados." "upload duplicate detail"
 
     $r = Invoke-Process (Join-Path $root "process\process-01112026.json")
     Assert-Status $r 200 "process success"

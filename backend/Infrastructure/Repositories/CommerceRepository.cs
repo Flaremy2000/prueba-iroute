@@ -1,6 +1,6 @@
 using System.Data;
-using System.Globalization;
 using IRoute.Application.Abstractions;
+using IRoute.Application.Commerce;
 using IRoute.Domain.Entities;
 using IRoute.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
@@ -13,8 +13,11 @@ namespace IRoute.Infrastructure.Repositories;
 /// </summary>
 public sealed class CommerceRepository(CommerceDbContext dbContext) : ICommerceRepository
 {
-    public async Task<int> CreateAsync(
+    public async Task<UploadInsertResult> CreateAsync(
         IReadOnlyCollection<CommerceRecord> records,
+        string fileName,
+        string contentHash,
+        DateOnly processDate,
         CancellationToken cancellationToken)
     {
         EnsureSqlServer();
@@ -34,16 +37,30 @@ public sealed class CommerceRepository(CommerceDbContext dbContext) : ICommerceR
             command.CommandType = CommandType.StoredProcedure;
             command.CommandTimeout = dbContext.Database.GetCommandTimeout() ?? 60;
             command.Parameters.Add(BuildTvp(records));
+            command.Parameters.Add(new SqlParameter("@file_name", SqlDbType.NVarChar, 255)
+            {
+                Value = fileName
+            });
+            command.Parameters.Add(new SqlParameter("@content_hash", SqlDbType.Char, 64)
+            {
+                Value = contentHash
+            });
+            command.Parameters.Add(new SqlParameter("@process_date", SqlDbType.Date)
+            {
+                Value = processDate.ToDateTime(TimeOnly.MinValue)
+            });
 
-            var result = await command.ExecuteScalarAsync(cancellationToken);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-            if (result is null || result == DBNull.Value)
+            if (!await reader.ReadAsync(cancellationToken))
             {
                 throw new InvalidOperationException(
-                    "sp_create_commerce no devolvió la cantidad de filas insertadas.");
+                    "sp_create_commerce no devolvió el resultado de la carga.");
             }
 
-            return Convert.ToInt32(result, CultureInfo.InvariantCulture);
+            var duplicate = reader.FieldCount > 1 && reader.GetBoolean(1);
+
+            return new UploadInsertResult(reader.GetInt32(0), duplicate);
         }
         finally
         {
@@ -114,8 +131,10 @@ public sealed class CommerceRepository(CommerceDbContext dbContext) : ICommerceR
     private static SqlParameter BuildTvp(IReadOnlyCollection<CommerceRecord> records)
     {
         var table = new DataTable();
-        table.Columns.Add("pc_nomcomred", typeof(string));
-        table.Columns.Add("pc_numdoc", typeof(string));
+        var merchantName = table.Columns.Add("pc_nomcomred", typeof(string));
+        merchantName.MaxLength = 200;
+        var documentNumber = table.Columns.Add("pc_numdoc", typeof(string));
+        documentNumber.MaxLength = 50;
         table.Columns.Add("pc_processdate", typeof(DateTime));
 
         foreach (var record in records)

@@ -9,6 +9,8 @@ public sealed class CommerceDbContext(DbContextOptions<CommerceDbContext> option
 
     public DbSet<CommerceQuarantineEntity> Quarantine => Set<CommerceQuarantineEntity>();
 
+    public DbSet<UserEntity> Users => Set<UserEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CommerceDbContext).Assembly);
