@@ -1,0 +1,260 @@
+<div class="fade-up">
+  <header class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div>
+      <p class="eyebrow">Paso 1 de 3</p>
+      <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Cargar archivo CSV</h1>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+        Sube el archivo de comercios. La carga valida el nombre, las columnas y evita insertar dos
+        veces el mismo contenido.
+      </p>
+    </div>
+    <a routerLink="/quarantine" class="btn btn-ghost self-start sm:self-auto">
+      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+        <path d="M12 9v4m0 4h.01M10.3 4.6 2.8 17.4A2 2 0 0 0 4.5 20h15a2 2 0 0 0 1.7-2.6L13.7 4.6a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      Ver cuarentena
+    </a>
+  </header>
+
+  <div class="mt-7 grid gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
+    <section class="card overflow-hidden">
+      <div class="border-b border-slate-200/80 px-5 py-4 sm:px-6">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-semibold text-slate-950">Archivo de comercios</h2>
+            <p class="mt-0.5 text-xs text-slate-500">Formato CSV, máximo 20 MB</p>
+          </div>
+          <span class="badge">
+            <span class="h-1.5 w-1.5 rounded-full bg-cyan-500"></span>
+            commerce_DDMMYYYY.csv
+          </span>
+        </div>
+      </div>
+
+      <div class="p-5 sm:p-6">
+        <input
+          #fileInput
+          type="file"
+          class="sr-only"
+          accept=".csv,text/csv"
+          (change)="onFileSelected($event)"
+        />
+
+        @if (!selectedFile()) {
+          <div
+            class="relative rounded-2xl border-2 border-dashed p-7 text-center transition sm:p-10"
+            [class.border-cyan-400]="dragging()"
+            [class.bg-cyan-50]="dragging()"
+            [class.border-slate-300]="!dragging()"
+            [class.bg-slate-50]="!dragging()"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave()"
+            (drop)="onDrop($event)"
+          >
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-cyan-600 shadow-sm ring-1 ring-slate-200">
+              <svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" aria-hidden="true">
+                <path d="M12 16V4m0 0L8 8m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3 class="mt-4 text-base font-semibold text-slate-900">Arrastra el CSV aquí</h3>
+            <p class="mx-auto mt-1.5 max-w-sm text-sm leading-6 text-slate-500">
+              o selecciónalo desde tu equipo. El nombre debe incluir la fecha del proceso.
+            </p>
+            <button type="button" class="btn btn-primary mt-5" (click)="fileInput.click()">
+              Seleccionar archivo
+            </button>
+            <p class="mt-4 text-xs text-slate-400">Extensión .csv · hasta 20 MB</p>
+          </div>
+        } @else {
+          <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex min-w-0 items-center gap-3">
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-cyan-600 shadow-sm ring-1 ring-slate-200">
+                  <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" aria-hidden="true">
+                    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                    <path d="M14 3v5h5M9 13h6M9 17h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-semibold text-slate-900">{{ selectedFile()?.name }}</p>
+                  <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <span>{{ fileSize() }}</span>
+                    @if (fileDate()) {
+                      <span class="text-slate-300">•</span>
+                      <span>Proceso {{ formatDate(fileDate()) }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-ghost self-start px-3 py-2 text-xs sm:self-auto"
+                [disabled]="loading()"
+                (click)="removeFile()"
+              >
+                Quitar
+              </button>
+            </div>
+
+            <div class="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p class="flex items-center gap-2 text-xs text-slate-500">
+                <svg viewBox="0 0 24 24" class="h-4 w-4 text-emerald-600" fill="none" aria-hidden="true">
+                  <path d="m5 12 4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Listo para enviar a la API
+              </p>
+              <button type="button" class="btn btn-primary" [disabled]="loading()" (click)="upload()">
+                @if (loading()) {
+                  <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+                  Cargando...
+                } @else {
+                  <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+                    <path d="M12 16V4m0 0L8 8m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  Cargar archivo
+                }
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (localError()) {
+          <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-sm text-amber-800" role="alert">
+            <p class="font-medium">Revisa el archivo</p>
+            <p class="mt-1">{{ localError() }}</p>
+          </div>
+        }
+
+        @if (error()) {
+          <div class="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-700" role="alert" aria-live="polite">
+            <div class="flex gap-3">
+              <svg viewBox="0 0 24 24" class="mt-0.5 h-5 w-5 shrink-0" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8" />
+                <path d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+              <div>
+                <p class="font-medium">No se pudo cargar</p>
+                <p class="mt-1">{{ error() }}</p>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (result(); as uploadResult) {
+          <div class="mt-5 overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50/60" aria-live="polite">
+            <div class="flex items-start gap-3 border-b border-emerald-200/70 p-4">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                  <path d="m5 12 4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-emerald-900">Archivo cargado correctamente</p>
+                <p class="mt-1 text-sm text-emerald-700">
+                  {{ uploadResult.fileName }} · proceso del {{ formatDate(uploadResult.processDate) }}
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 divide-x divide-emerald-200/70">
+              <div class="p-4">
+                <p class="text-xs font-medium text-emerald-700">Filas leídas</p>
+                <p class="mt-1 text-2xl font-semibold text-emerald-950">{{ uploadResult.rowsRead }}</p>
+              </div>
+              <div class="p-4">
+                <p class="text-xs font-medium text-emerald-700">Filas insertadas</p>
+                <p class="mt-1 text-2xl font-semibold text-emerald-950">{{ uploadResult.rowsInserted }}</p>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-2 border-t border-emerald-200/70 p-4 sm:flex-row">
+              <a
+                routerLink="/process"
+                [queryParams]="{ date: uploadResult.processDate }"
+                class="btn btn-primary flex-1"
+              >
+                Procesar esta fecha
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+                  <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </a>
+              <button type="button" class="btn btn-ghost bg-white" (click)="removeFile()">
+                Cargar otro
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <aside class="space-y-5">
+      <section class="card p-5">
+        <h2 class="text-sm font-semibold text-slate-950">Antes de cargar</h2>
+        <ul class="mt-4 space-y-3 text-sm text-slate-600">
+          <li class="flex gap-3">
+            <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-[10px] font-bold text-cyan-700">1</span>
+            <span>Nombre <code class="rounded bg-slate-100 px-1 py-0.5 text-xs text-slate-800">commerce_DDMMYYYY.csv</code>.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-[10px] font-bold text-cyan-700">2</span>
+            <span>Columnas <code class="text-xs">pc_nomcomred</code>, <code class="text-xs">pc_numdoc</code> y <code class="text-xs">pc_processdate</code>.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-[10px] font-bold text-cyan-700">3</span>
+            <span>Todas las filas con la misma fecha indicada en el nombre.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-[10px] font-bold text-cyan-700">4</span>
+            <span>Delimitador coma o punto y coma, hasta 20 MB.</span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+        <div class="flex gap-3">
+          <svg viewBox="0 0 24 24" class="mt-0.5 h-5 w-5 shrink-0 text-amber-600" fill="none" aria-hidden="true">
+            <path d="M12 9v4m0 4h.01M10.3 4.6 2.8 17.4A2 2 0 0 0 4.5 20h15a2 2 0 0 0 1.7-2.6L13.7 4.6a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <div>
+            <p class="text-sm font-semibold text-amber-900">Cargas duplicadas</p>
+            <p class="mt-1 text-xs leading-5 text-amber-800">
+              La API identifica el contenido por SHA-256. Subir el mismo CSV con otro nombre también
+              devuelve un conflicto.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card p-5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-950">Flujo</h2>
+          <span class="text-xs text-slate-400">1 / 3</span>
+        </div>
+        <ol class="mt-4 space-y-4">
+          <li class="flex gap-3">
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-950 text-[10px] font-bold text-cyan-300">1</span>
+            <div>
+              <p class="text-sm font-medium text-slate-800">Cargar CSV</p>
+              <p class="mt-0.5 text-xs text-slate-500">Inserta las filas sin procesar.</p>
+            </div>
+          </li>
+          <li class="flex gap-3">
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">2</span>
+            <div>
+              <p class="text-sm font-medium text-slate-700">Procesar fecha</p>
+              <p class="mt-0.5 text-xs text-slate-500">Mueve los inválidos a cuarentena.</p>
+            </div>
+          </li>
+          <li class="flex gap-3">
+            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">3</span>
+            <div>
+              <p class="text-sm font-medium text-slate-700">Revisar cuarentena</p>
+              <p class="mt-0.5 text-xs text-slate-500">Consulta el motivo de cada rechazo.</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+    </aside>
+  </div>
+</div>

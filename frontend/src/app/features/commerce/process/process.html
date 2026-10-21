@@ -1,0 +1,214 @@
+<div class="fade-up">
+  <header class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div>
+      <p class="eyebrow">Paso 2 de 3</p>
+      <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Procesar una fecha</h1>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+        Valida los registros cargados y mueve a cuarentena los que no cumplen las reglas de negocio.
+      </p>
+    </div>
+    <a routerLink="/upload" class="btn btn-ghost self-start sm:self-auto">
+      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+        <path d="M12 16V4m0 0L8 8m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      Cargar otro CSV
+    </a>
+  </header>
+
+  <div class="mt-7 grid gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
+    <div class="space-y-6">
+      <section class="card overflow-hidden">
+        <div class="border-b border-slate-200/80 px-5 py-4 sm:px-6">
+          <h2 class="text-base font-semibold text-slate-950">Fecha de proceso</h2>
+          <p class="mt-0.5 text-xs text-slate-500">
+            Debe coincidir con la fecha del archivo cargado.
+          </p>
+        </div>
+
+        <form class="p-5 sm:p-6" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div class="w-full sm:max-w-xs">
+              <label class="label" for="processDate">Fecha</label>
+              <input
+                id="processDate"
+                type="date"
+                class="input"
+                formControlName="processDate"
+                [attr.aria-invalid]="form.controls.processDate.touched && form.controls.processDate.invalid"
+              />
+              @if (form.controls.processDate.touched && form.controls.processDate.hasError('required')) {
+                <p class="field-error">Selecciona una fecha.</p>
+              }
+            </div>
+
+            <button type="submit" class="btn btn-primary sm:mb-0" [disabled]="loading()">
+              @if (loading()) {
+                <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+                Procesando...
+              } @else {
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+                  <path d="m5 12 4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Procesar fecha
+              }
+            </button>
+          </div>
+
+          @if (error()) {
+            <div class="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-700" role="alert" aria-live="polite">
+              <div class="flex gap-3">
+                <svg viewBox="0 0 24 24" class="mt-0.5 h-5 w-5 shrink-0" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8" />
+                  <path d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+                <div>
+                  <p class="font-medium">No se pudo procesar</p>
+                  <p class="mt-1">{{ error() }}</p>
+                </div>
+              </div>
+            </div>
+          }
+        </form>
+      </section>
+
+      @if (result(); as processResult) {
+        <section class="card overflow-hidden" aria-live="polite">
+          <div class="flex flex-col gap-3 border-b border-slate-200/80 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div class="flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                  <path d="m5 12 4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-base font-semibold text-slate-950">Proceso completado</h2>
+                <p class="text-xs text-slate-500">Fecha {{ formatDate(processResult.processDate) }}</p>
+              </div>
+            </div>
+            <span class="badge border-emerald-200 bg-emerald-50 text-emerald-700">
+              Idempotente
+            </span>
+          </div>
+
+          <div class="grid gap-px bg-slate-200 sm:grid-cols-2">
+            <div class="bg-white p-5 sm:p-6">
+              <div class="flex items-center gap-2 text-xs font-medium text-amber-700">
+                <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                Enviados a cuarentena
+              </div>
+              <p class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                {{ processResult.quarantined }}
+              </p>
+              <p class="mt-1 text-xs text-slate-500">Registros con datos inválidos.</p>
+            </div>
+            <div class="bg-white p-5 sm:p-6">
+              <div class="flex items-center gap-2 text-xs font-medium text-emerald-700">
+                <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                Permanecen en comercios
+              </div>
+              <p class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                {{ processResult.remaining }}
+              </p>
+              <p class="mt-1 text-xs text-slate-500">Registros válidos para la fecha.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-2 border-t border-slate-200 p-5 sm:flex-row sm:px-6">
+            <a
+              routerLink="/quarantine"
+              [queryParams]="{ date: processResult.processDate }"
+              class="btn btn-primary flex-1"
+            >
+              Ver cuarentena de esta fecha
+              <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+                <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </a>
+            <button type="button" class="btn btn-ghost" (click)="reset()">Procesar otra fecha</button>
+          </div>
+        </section>
+      } @else {
+        <section class="card flex min-h-56 flex-col items-center justify-center p-8 text-center">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+            <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" aria-hidden="true">
+              <rect x="4" y="5" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.7" />
+              <path d="M8 3v4M16 3v4M4 10h16m-9 5 2 2 3.5-3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <h2 class="mt-4 text-base font-semibold text-slate-900">Sin resultados todavía</h2>
+          <p class="mt-1.5 max-w-sm text-sm leading-6 text-slate-500">
+            Selecciona la fecha de un archivo ya cargado y ejecuta el proceso para ver el resumen.
+          </p>
+        </section>
+      }
+    </div>
+
+    <aside class="space-y-5">
+      <section class="card p-5">
+        <h2 class="text-sm font-semibold text-slate-950">Reglas del proceso</h2>
+        <ul class="mt-4 space-y-4">
+          <li class="flex gap-3">
+            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" aria-hidden="true">
+                <path d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </span>
+            <div>
+              <p class="text-sm font-medium text-slate-800">Nombre vacío</p>
+              <p class="mt-0.5 text-xs leading-5 text-slate-500">
+                <code class="text-[11px]">pc_nomcomred</code> vacío se envía a cuarentena.
+              </p>
+            </div>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" aria-hidden="true">
+                <path d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </span>
+            <div>
+              <p class="text-sm font-medium text-slate-800">Documento inválido</p>
+              <p class="mt-0.5 text-xs leading-5 text-slate-500">
+                <code class="text-[11px]">pc_numdoc</code> vacío o con caracteres no numéricos.
+              </p>
+            </div>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" aria-hidden="true">
+                <path d="m5 12 4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+            <div>
+              <p class="text-sm font-medium text-slate-800">Válidos permanecen</p>
+              <p class="mt-0.5 text-xs leading-5 text-slate-500">
+                Los registros correctos se mantienen en <code class="text-[11px]">commerce</code>.
+              </p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section class="rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
+        <p class="text-sm font-semibold text-cyan-950">Proceso idempotente</p>
+        <p class="mt-1.5 text-xs leading-5 text-cyan-800">
+          Puedes ejecutar la misma fecha más de una vez. Los registros ya procesados no se mueven
+          nuevamente.
+        </p>
+      </section>
+
+      <section class="card p-5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-950">Flujo</h2>
+          <span class="text-xs text-slate-400">2 / 3</span>
+        </div>
+        <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
+          <div class="h-full w-2/3 rounded-full bg-cyan-400"></div>
+        </div>
+        <p class="mt-3 text-xs leading-5 text-slate-500">
+          Después del proceso, consulta los rechazos y su motivo en la pantalla de cuarentena.
+        </p>
+      </section>
+    </aside>
+  </div>
+</div>

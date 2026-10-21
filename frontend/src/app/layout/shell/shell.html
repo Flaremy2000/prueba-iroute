@@ -1,0 +1,233 @@
+<div class="min-h-dvh bg-slate-50 text-slate-900 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]">
+  <aside class="hidden bg-slate-950 text-slate-300 lg:flex lg:min-h-dvh lg:flex-col">
+    <div class="flex items-center gap-3 px-6 py-6">
+      <div
+        class="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-400/20"
+      >
+        <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" aria-hidden="true">
+          <path
+            d="M5 17.5 9.5 13 12.5 16 19 8.5"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <circle cx="5" cy="17.5" r="1.8" fill="currentColor" />
+          <circle cx="19" cy="8.5" r="1.8" fill="currentColor" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-base font-semibold tracking-tight text-white">i-Route</p>
+        <p class="text-xs text-slate-500">Commerce console</p>
+      </div>
+    </div>
+
+    <nav class="mt-4 flex-1 px-3" aria-label="Navegación principal">
+      <p class="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+        Operación
+      </p>
+      <ul class="space-y-1">
+        @for (item of navigation; track item.path) {
+          <li>
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="bg-white/10 text-white shadow-sm ring-1 ring-white/10"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="group flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition hover:bg-white/5 hover:text-white"
+            >
+              <span
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-slate-400 transition group-hover:bg-cyan-400/10 group-hover:text-cyan-300"
+              >
+                @switch (item.icon) {
+                  @case ('upload') {
+                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 16V4m0 0L8 8m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  }
+                  @case ('process') {
+                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                      <rect
+                        x="4"
+                        y="5"
+                        width="16"
+                        height="16"
+                        rx="3"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                      />
+                      <path
+                        d="M8 3v4M16 3v4M4 10h16m-9 5 2 2 3.5-3.5"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  }
+                  @case ('quarantine') {
+                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 9v4m0 4h.01M10.3 4.6 2.8 17.4A2 2 0 0 0 4.5 20h15a2 2 0 0 0 1.7-2.6L13.7 4.6a2 2 0 0 0-3.4 0Z"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  }
+                }
+              </span>
+              <span class="min-w-0">
+                <span class="block font-medium">{{ item.label }}</span>
+                <span class="mt-0.5 block truncate text-xs text-slate-500">{{
+                  item.description
+                }}</span>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="m-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div class="flex items-center gap-2 text-xs font-medium text-slate-300">
+        <span class="relative flex h-2 w-2">
+          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60"></span>
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
+        </span>
+        API conectada
+      </div>
+      <p class="mt-2 text-xs leading-5 text-slate-500">
+        Los endpoints de comercio requieren una sesión activa.
+      </p>
+    </div>
+  </aside>
+
+  @if (mobileOpen()) {
+    <div class="fixed inset-0 z-40 lg:hidden">
+      <button
+        type="button"
+        class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
+        aria-label="Cerrar menú"
+        (click)="closeMobile()"
+      ></button>
+      <aside class="relative flex h-full w-72 max-w-[85vw] flex-col bg-slate-950 p-4 text-slate-300 shadow-2xl">
+        <div class="flex items-center justify-between px-2 py-2">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400 text-slate-950">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                <path
+                  d="M5 17.5 9.5 13 12.5 16 19 8.5"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="font-semibold text-white">i-Route</p>
+              <p class="text-xs text-slate-500">Commerce console</p>
+            </div>
+          </div>
+          <button type="button" class="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-white" (click)="closeMobile()">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+              <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <nav class="mt-6 flex-1" aria-label="Navegación móvil">
+          <ul class="space-y-1">
+            @for (item of navigation; track item.path) {
+              <li>
+                <a
+                  [routerLink]="item.path"
+                  routerLinkActive="bg-white/10 text-white"
+                  [routerLinkActiveOptions]="{ exact: true }"
+                  class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition hover:bg-white/5 hover:text-white"
+                  (click)="closeMobile()"
+                >
+                  <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5">
+                    @switch (item.icon) {
+                      @case ('upload') {
+                        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                          <path d="M12 16V4m0 0L8 8m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      }
+                      @case ('process') {
+                        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                          <rect x="4" y="5" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.8" />
+                          <path d="M8 3v4M16 3v4M4 10h16m-9 5 2 2 3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      }
+                      @case ('quarantine') {
+                        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                          <path d="M12 9v4m0 4h.01M10.3 4.6 2.8 17.4A2 2 0 0 0 4.5 20h15a2 2 0 0 0 1.7-2.6L13.7 4.6a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      }
+                    }
+                  </span>
+                  <span>
+                    <span class="block font-medium">{{ item.label }}</span>
+                    <span class="mt-0.5 block text-xs text-slate-500">{{ item.description }}</span>
+                  </span>
+                </a>
+              </li>
+            }
+          </ul>
+        </nav>
+
+        <button type="button" class="btn border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10" (click)="logout()">
+          Cerrar sesión
+        </button>
+      </aside>
+    </div>
+  }
+
+  <div class="flex min-h-dvh min-w-0 flex-col">
+    <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl">
+      <div class="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div class="flex min-w-0 items-center gap-3">
+          <button type="button" class="btn-icon lg:hidden" aria-label="Abrir menú" (click)="mobileOpen.set(true)">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+          </button>
+          <div class="min-w-0">
+            <p class="truncate text-sm font-semibold text-slate-900">Panel de comercios</p>
+            <p class="hidden truncate text-xs text-slate-500 sm:block">
+              Carga, procesamiento y control de registros rechazados
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="hidden text-right sm:block">
+            <p class="text-sm font-semibold text-slate-900">{{ auth.user()?.username }}</p>
+            <p class="text-xs text-slate-500">{{ auth.user()?.role }}</p>
+          </div>
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-xs font-bold text-cyan-300">
+            {{ initials() }}
+          </div>
+          <button type="button" class="btn btn-ghost px-3 py-2" (click)="logout()">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+              <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="hidden sm:inline">Salir</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <router-outlet />
+    </main>
+  </div>
+</div>

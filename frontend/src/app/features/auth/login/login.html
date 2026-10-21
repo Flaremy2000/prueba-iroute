@@ -1,0 +1,181 @@
+<div class="relative min-h-dvh overflow-hidden bg-slate-950">
+  <div class="auth-backdrop pointer-events-none absolute inset-0"></div>
+  <div class="auth-grid pointer-events-none absolute inset-0 opacity-50"></div>
+
+  <div
+    class="relative mx-auto grid min-h-dvh max-w-6xl items-center gap-12 px-5 py-10 lg:grid-cols-[1.08fr_0.92fr] lg:px-8"
+  >
+    <section class="fade-up hidden text-white lg:block">
+      <div class="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-semibold text-cyan-200">
+        <span class="h-1.5 w-1.5 rounded-full bg-cyan-300"></span>
+        Consola de comercios
+      </div>
+
+      <h1 class="mt-7 max-w-xl text-5xl font-semibold leading-[1.08] tracking-tight">
+        Carga y procesa tus CSV con
+        <span class="text-cyan-300">trazabilidad completa.</span>
+      </h1>
+
+      <p class="mt-5 max-w-lg text-base leading-7 text-slate-400">
+        Sube archivos <code class="rounded bg-white/10 px-1.5 py-0.5 text-xs text-cyan-200">commerce_DDMMYYYY.csv</code>,
+        procesa cada fecha y revisa los registros rechazados con su motivo exacto.
+      </p>
+
+      <ul class="mt-8 grid gap-3 text-sm text-slate-300">
+        <li class="flex items-center gap-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-300">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+              <path d="m5 12 4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          Detección de cargas duplicadas por hash SHA-256.
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-300">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </span>
+          Procesamiento idempotente por fecha de proceso.
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-400/10 text-amber-300">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+              <path d="M12 9v4m0 4h.01M10.3 4.6 2.8 17.4A2 2 0 0 0 4.5 20h15a2 2 0 0 0 1.7-2.6L13.7 4.6a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          Cuarentena auditable con filtros y paginación.
+        </li>
+      </ul>
+
+      <div class="mt-9 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-2xl shadow-slate-950/40">
+        <div class="flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <span class="text-xs font-medium text-slate-400">commerce_01112026.csv</span>
+          <span class="rounded-full bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+            Ejemplo
+          </span>
+        </div>
+        <pre class="overflow-x-auto p-4 text-xs leading-6 text-slate-400"><code>pc_nomcomred,pc_numdoc,pc_processdate
+Comercio Alfa,10000001,2026-11-01
+Comercio Beta,10000002,2026-11-01
+Comercio Gamma,10000003,2026-11-01</code></pre>
+      </div>
+    </section>
+
+    <section class="fade-up mx-auto w-full max-w-md">
+      <div class="mb-8 flex items-center gap-3 lg:hidden">
+        <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-400/20">
+          <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" aria-hidden="true">
+            <path d="M5 17.5 9.5 13 12.5 16 19 8.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="5" cy="17.5" r="1.8" fill="currentColor" />
+            <circle cx="19" cy="8.5" r="1.8" fill="currentColor" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-lg font-semibold text-white">i-Route</p>
+          <p class="text-xs text-slate-500">Commerce console</p>
+        </div>
+      </div>
+
+      <div class="rounded-3xl border border-white/10 bg-white p-6 shadow-2xl shadow-slate-950/30 sm:p-8">
+        <p class="eyebrow">Acceso seguro</p>
+        <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Iniciar sesión</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-500">
+          Ingresa con tus credenciales para administrar los archivos de comercios.
+        </p>
+
+        @if (error()) {
+          <div
+            class="mt-5 flex gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-700"
+            role="alert"
+            aria-live="polite"
+          >
+            <svg viewBox="0 0 24 24" class="mt-0.5 h-5 w-5 shrink-0" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8" />
+              <path d="M12 8v4m0 4h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+            <span>{{ error() }}</span>
+          </div>
+        }
+
+        <form class="mt-6 space-y-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div>
+            <label class="label" for="username">Usuario</label>
+            <input
+              id="username"
+              type="text"
+              class="input"
+              formControlName="username"
+              autocomplete="username"
+              placeholder="admin"
+              [attr.aria-invalid]="form.controls.username.touched && form.controls.username.invalid"
+            />
+            @if (form.controls.username.touched && form.controls.username.hasError('required')) {
+              <p class="field-error">El usuario es obligatorio.</p>
+            }
+          </div>
+
+          <div>
+            <label class="label" for="password">Contraseña</label>
+            <div class="relative">
+              <input
+                id="password"
+                [type]="showPassword() ? 'text' : 'password'"
+                class="input pr-12"
+                formControlName="password"
+                autocomplete="current-password"
+                placeholder="••••••••"
+                [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+              />
+              <button
+                type="button"
+                class="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-slate-400 transition hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-500"
+                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                (click)="showPassword.set(!showPassword())"
+              >
+                @if (showPassword()) {
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                    <path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.7 10.7 0 0 1 12 5c5 0 8.5 4.3 9.5 7-.4 1-1.2 2.2-2.3 3.3M6.4 6.4C4.9 7.5 3.7 9 3 12c1 2.7 4.5 7 9 7 1.3 0 2.5-.3 3.6-.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+                    <path d="M3 12c1-2.7 4.5-7 9-7s8 4.3 9 7c-1 2.7-4.5 7-9 7s-8-4.3-9-7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                    <circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.8" />
+                  </svg>
+                }
+              </button>
+            </div>
+            @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+              <p class="field-error">La contraseña es obligatoria.</p>
+            }
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full py-3" [disabled]="loading()">
+            @if (loading()) {
+              <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+              Ingresando...
+            } @else {
+              Ingresar
+              <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+                <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            }
+          </button>
+        </form>
+
+        <div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+          <p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Credenciales de desarrollo</p>
+          <div class="mt-1.5 flex items-center justify-between gap-3 font-mono text-xs text-slate-700">
+            <span>admin</span>
+            <span class="text-slate-400">/</span>
+            <span>Admin123!</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="mt-5 text-center text-xs text-slate-500">
+        La sesión expira a los 60 minutos. El token se guarda solo en esta pestaña.
+      </p>
+    </section>
+  </div>
+</div>
