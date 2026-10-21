@@ -1,0 +1,45 @@
+# -------------------------
+# Documentos de la prueba
+# -------------------------
+*.docx
+~$*
+
+# -------------------------
+# .NET
+# -------------------------
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+TestResults/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# -------------------------
+# Angular / Node
+# -------------------------
+node_modules/
+dist/
+.angular/
+coverage/
+*.tsbuildinfo
+
+# -------------------------
+# Entorno y secretos
+# -------------------------
+.env
+.env.*
+appsettings.*.local.json
+*.pfx
+
+# -------------------------
+# Editores / SO
+# -------------------------
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
