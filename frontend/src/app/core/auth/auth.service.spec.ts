@@ -2,8 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { LoginResponse } from '../models';
 import { AuthService } from './auth.service';
-import { LoginResponse } from './models';
 
 function tokenWithExpiry(expiresAt: number): string {
   const payload = btoa(JSON.stringify({ exp: Math.floor(expiresAt / 1000) }))

@@ -3,8 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
-import { CurrentUser, LoginRequest, LoginResponse } from './models';
+import { environment } from '../../../environments/environment';
+import { CurrentUser, LoginRequest, LoginResponse } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

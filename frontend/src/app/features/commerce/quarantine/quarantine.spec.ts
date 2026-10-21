@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
-import { CommerceService } from '../../../core/commerce.service';
+import { CommerceService } from '../../../core/commerce';
 import { PagedResult, QuarantineItem } from '../../../core/models';
 import { QuarantinePage } from './quarantine';
 

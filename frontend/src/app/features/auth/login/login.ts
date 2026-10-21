@@ -3,8 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import { AuthService } from '../../../core/auth.service';
-import { problemMessage } from '../../../core/problem-details';
+import { AuthService } from '../../../core/auth';
+import { problemMessage } from '../../../core/utils';
 
 @Component({
   selector: 'app-login-page',

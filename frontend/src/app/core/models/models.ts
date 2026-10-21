@@ -51,3 +51,15 @@ export interface ProblemDetails {
   instance?: string;
   traceId?: string;
 }
+
+export interface CsvPreviewRow {
+  merchantName: string;
+  documentNumber: string;
+  processDate: string;
+}
+
+export interface CsvPreview {
+  headers: string[];
+  rows: CsvPreviewRow[];
+  totalSampled: number;
+}

@@ -2,11 +2,16 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { CommerceService } from '../../../core/commerce.service';
-import { formatFileSize, processDateFromFileName, validateCsvFile } from '../../../core/csv-file';
-import { formatIsoDate } from '../../../core/date';
-import { UploadResult } from '../../../core/models';
-import { problemMessage } from '../../../core/problem-details';
+import { CommerceService } from '../../../core/commerce';
+import { CsvPreview, UploadResult } from '../../../core/models';
+import {
+  formatFileSize,
+  formatIsoDate,
+  problemMessage,
+  processDateFromFileName,
+  readCsvPreview,
+  validateCsvFile
+} from '../../../core/utils';
 
 @Component({
   selector: 'app-upload-page',
@@ -21,6 +26,8 @@ export class UploadPage {
 
   readonly selectedFile = signal<File | null>(null);
   readonly fileDate = signal<string | null>(null);
+  readonly preview = signal<CsvPreview | null>(null);
+  readonly previewLoading = signal(false);
   readonly dragging = signal(false);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -72,6 +79,7 @@ export class UploadPage {
     if (validationError) {
       this.selectedFile.set(null);
       this.fileDate.set(null);
+      this.preview.set(null);
       this.localError.set(validationError);
       return;
     }
@@ -79,6 +87,7 @@ export class UploadPage {
     this.localError.set(null);
     this.selectedFile.set(file);
     this.fileDate.set(processDateFromFileName(file.name));
+    void this.loadPreview(file);
   }
 
   upload(): void {
@@ -111,6 +120,7 @@ export class UploadPage {
   removeFile(): void {
     this.selectedFile.set(null);
     this.fileDate.set(null);
+    this.preview.set(null);
     this.localError.set(null);
     this.error.set(null);
     this.result.set(null);
@@ -118,5 +128,17 @@ export class UploadPage {
 
   formatDate(value: string | null | undefined): string {
     return formatIsoDate(value);
+  }
+
+  private async loadPreview(file: File): Promise<void> {
+    this.previewLoading.set(true);
+    try {
+      const preview = await readCsvPreview(file, 5);
+      this.preview.set(preview);
+    } catch {
+      this.preview.set(null);
+    } finally {
+      this.previewLoading.set(false);
+    }
   }
 }
