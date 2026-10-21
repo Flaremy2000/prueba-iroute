@@ -35,8 +35,9 @@ public sealed class CsvCommerceParser : ICsvCommerceParser
         Stream content,
         CancellationToken cancellationToken)
     {
+        using var hashingStream = new HashingStream(content);
         using var reader = new StreamReader(
-            content,
+            hashingStream,
             encoding: System.Text.Encoding.UTF8,
             detectEncodingFromByteOrderMarks: true,
             bufferSize: 4096,
@@ -59,7 +60,7 @@ public sealed class CsvCommerceParser : ICsvCommerceParser
 
         if (!await csv.ReadAsync())
         {
-            return new CsvParseResult([]);
+            return new CsvParseResult([], hashingStream.GetHashHex());
         }
 
         csv.ReadHeader();
@@ -128,7 +129,7 @@ public sealed class CsvCommerceParser : ICsvCommerceParser
             });
         }
 
-        return new CsvParseResult(records);
+        return new CsvParseResult(records, hashingStream.GetHashHex());
     }
 
     private static bool TryParseDate(string? value, out DateOnly processDate)

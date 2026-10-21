@@ -13,14 +13,18 @@ public sealed class GlobalExceptionHandler(
         CancellationToken cancellationToken)
     {
         var isValidationError = exception is DomainValidationException;
+        var isConflict = exception is DomainConflictException;
+
         var statusCode = isValidationError
             ? StatusCodes.Status400BadRequest
-            : StatusCodes.Status500InternalServerError;
+            : isConflict
+                ? StatusCodes.Status409Conflict
+                : StatusCodes.Status500InternalServerError;
 
-        if (isValidationError)
+        if (isValidationError || isConflict)
         {
             logger.LogWarning(
-                "Solicitud inválida en {Path}: {Message}",
+                "Solicitud rechazada en {Path}: {Message}",
                 httpContext.Request.Path,
                 exception.Message);
         }
@@ -37,8 +41,10 @@ public sealed class GlobalExceptionHandler(
             Status = statusCode,
             Title = isValidationError
                 ? "Solicitud inválida"
-                : "Error interno del servidor",
-            Detail = isValidationError
+                : isConflict
+                    ? "Conflicto"
+                    : "Error interno del servidor",
+            Detail = isValidationError || isConflict
                 ? exception.Message
                 : "Ocurrió un error inesperado. Revisa los logs del servidor.",
             Instance = httpContext.Request.Path

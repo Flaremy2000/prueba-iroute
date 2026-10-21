@@ -1,8 +1,10 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using IRoute.Application.Abstractions;
+using IRoute.Application.Auth;
 using IRoute.Application.Commerce;
 using IRoute.Application.Quarantine;
 using IRoute.Domain.Exceptions;
@@ -20,7 +22,7 @@ public sealed class CommerceControllerTests : IDisposable
     [Fact]
     public async Task Upload_WithoutFile_Returns400()
     {
-        using var client = _factory.CreateClient();
+        using var client = _factory.CreateAuthenticatedClient();
         using var content = new MultipartFormDataContent
         {
             { new StringContent("valor"), "other" }
@@ -36,7 +38,7 @@ public sealed class CommerceControllerTests : IDisposable
     [Fact]
     public async Task Upload_WithFile_ReturnsResult()
     {
-        using var client = _factory.CreateClient();
+        using var client = _factory.CreateAuthenticatedClient();
         using var content = new MultipartFormDataContent();
         using var file = new ByteArrayContent(Encoding.UTF8.GetBytes("csv"));
         file.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
@@ -54,7 +56,7 @@ public sealed class CommerceControllerTests : IDisposable
     [Fact]
     public async Task Process_ValidDate_ReturnsResult()
     {
-        using var client = _factory.CreateClient();
+        using var client = _factory.CreateAuthenticatedClient();
 
         var response = await client.PostAsJsonAsync(
             "/api/commerce/process",
@@ -71,7 +73,7 @@ public sealed class CommerceControllerTests : IDisposable
     [Fact]
     public async Task Process_WithoutDate_Returns400()
     {
-        using var client = _factory.CreateClient();
+        using var client = _factory.CreateAuthenticatedClient();
 
         var response = await client.PostAsJsonAsync(
             "/api/commerce/process",
@@ -85,7 +87,7 @@ public sealed class CommerceControllerTests : IDisposable
     [Fact]
     public async Task Quarantine_ReturnsPagedResult()
     {
-        using var client = _factory.CreateClient();
+        using var client = _factory.CreateAuthenticatedClient();
 
         var response = await client.GetAsync("/api/commerce/quarantine?page=2&pageSize=5");
 
@@ -99,11 +101,23 @@ public sealed class CommerceControllerTests : IDisposable
     [Fact]
     public async Task Quarantine_InvalidPage_Returns400()
     {
-        using var client = _factory.CreateClient();
+        using var client = _factory.CreateAuthenticatedClient();
 
         var response = await client.GetAsync("/api/commerce/quarantine?page=0");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Commerce_WithoutToken_Returns401()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/api/commerce/quarantine?page=1&pageSize=5");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("No autorizado", body);
     }
 
     [Fact]
@@ -139,6 +153,19 @@ public sealed class CommerceControllerTests : IDisposable
     {
         public FakeCommandService Command { get; } = new();
         public FakeQueryService Query { get; } = new();
+
+        public HttpClient CreateAuthenticatedClient()
+        {
+            var client = CreateClient();
+            var tokenService = Services.GetRequiredService<ITokenService>();
+            var token = tokenService.CreateToken(
+                new UserAccount(1, "tester", "not-used", "Admin", true));
+
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token.AccessToken);
+
+            return client;
+        }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {

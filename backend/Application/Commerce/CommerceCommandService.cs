@@ -48,13 +48,24 @@ public sealed partial class CommerceCommandService(
                 $"pero el nombre indica {processDate:yyyy-MM-dd}.");
         }
 
-        var inserted = await repository.CreateAsync(parseResult.Records, cancellationToken);
+        var insert = await repository.CreateAsync(
+            parseResult.Records,
+            fileName,
+            parseResult.ContentHash,
+            processDate,
+            cancellationToken);
+
+        if (insert.Duplicate)
+        {
+            throw new DomainConflictException(
+                "El archivo ya fue cargado. No se insertaron registros duplicados.");
+        }
 
         return new UploadCommerceResult(
             fileName,
             processDate,
             parseResult.Records.Count,
-            inserted);
+            insert.Inserted);
     }
 
     public async Task<ProcessCommerceResult> ProcessAsync(

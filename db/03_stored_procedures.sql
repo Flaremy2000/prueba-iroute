@@ -13,7 +13,10 @@ GO
    Devuelve la cantidad de filas insertadas.
    ------------------------------------------------------------------ */
 CREATE OR ALTER PROCEDURE dbo.sp_create_commerce
-    @rows dbo.CommerceTvp READONLY
+    @rows dbo.CommerceTvp READONLY,
+    @file_name NVARCHAR(255) = NULL,
+    @content_hash CHAR(64) = NULL,
+    @process_date DATE = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -21,6 +24,20 @@ BEGIN
 
     BEGIN TRY
         BEGIN TRANSACTION;
+
+        IF @content_hash IS NOT NULL
+           AND EXISTS
+           (
+               SELECT 1
+               FROM dbo.commerce_uploads WITH (UPDLOCK, HOLDLOCK)
+               WHERE content_hash = @content_hash
+           )
+        BEGIN
+            COMMIT TRANSACTION;
+
+            SELECT 0 AS inserted, CAST(1 AS BIT) AS duplicate;
+            RETURN;
+        END;
 
         INSERT INTO dbo.commerce (pc_nomcomred, pc_numdoc, pc_processdate)
         SELECT
@@ -31,13 +48,30 @@ BEGIN
 
         DECLARE @inserted INT = @@ROWCOUNT;
 
+        IF @content_hash IS NOT NULL
+        BEGIN
+            INSERT INTO dbo.commerce_uploads
+                (file_name, content_hash, process_date, rows_inserted)
+            VALUES
+                (COALESCE(@file_name, N''),
+                 @content_hash,
+                 COALESCE(@process_date, (SELECT TOP 1 pc_processdate FROM @rows)),
+                 @inserted);
+        END;
+
         COMMIT TRANSACTION;
 
-        SELECT @inserted AS inserted;
+        SELECT @inserted AS inserted, CAST(0 AS BIT) AS duplicate;
     END TRY
     BEGIN CATCH
         IF XACT_STATE() <> 0
             ROLLBACK TRANSACTION;
+
+        IF ERROR_NUMBER() IN (2601, 2627)
+        BEGIN
+            SELECT 0 AS inserted, CAST(1 AS BIT) AS duplicate;
+            RETURN;
+        END;
 
         THROW;
     END CATCH;

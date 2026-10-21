@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using IRoute.Domain.Exceptions;
 using IRoute.Infrastructure.Csv;
@@ -23,6 +24,9 @@ public sealed class CsvCommerceParserTests
         Assert.Equal("12345678", result.Records[0].DocumentNumber);
         Assert.Equal(new DateOnly(2026, 11, 2), result.Records[0].ProcessDate);
         Assert.Equal("Comercio, Dos", result.Records[1].MerchantName);
+        Assert.Equal(
+            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(csv))).ToLowerInvariant(),
+            result.ContentHash);
     }
 
     [Fact]
@@ -68,6 +72,9 @@ public sealed class CsvCommerceParserTests
         var result = await _parser.ParseAsync(ToStream(string.Empty), CancellationToken.None);
 
         Assert.Empty(result.Records);
+        Assert.Equal(
+            Convert.ToHexString(SHA256.HashData([])).ToLowerInvariant(),
+            result.ContentHash);
     }
 
     [Fact]

@@ -14,7 +14,8 @@ $scripts = @(
     "00_create_database.sql",
     "01_schema.sql",
     "02_alter_commerce_quarantine.sql",
-    "03_stored_procedures.sql"
+    "03_stored_procedures.sql",
+    "06_auth.sql"
 )
 
 if ($Seed) {

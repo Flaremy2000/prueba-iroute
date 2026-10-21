@@ -2,24 +2,27 @@
 
 Estos archivos cubren los casos de éxito y de error de los endpoints de comercio:
 
+- `POST /api/auth/login`
+- `GET /api/auth/me`
 - `POST /api/commerce/upload`
 - `POST /api/commerce/process`
 - `GET /api/commerce/quarantine`
 
-Las fechas usadas son `2026-11-01` a `2026-11-09` para no chocar con el seed de `2026-10-20`.
+Todos los endpoints de comercio requieren `Authorization: Bearer <token>`. Las fechas usadas son `2026-11-01` a `2026-11-09` para no chocar con el seed de `2026-10-20`.
 
 ## Requisitos
 
 - API ejecutándose en `http://localhost:5238` (perfil `http`).
-- SQL Server Express con la base `IRouteCommerce` y los scripts de `db/` aplicados.
+- SQL Server Express con la base `IRouteCommerce` y los scripts de `db/` aplicados, incluido `db/06_auth.sql`.
 - `curl.exe` y `sqlcmd` disponibles en el PATH.
+- Usuario de desarrollo `admin` / `Admin123!`.
 
 ## Limpieza de datos de prueba
 
 Antes de repetir una corrida, elimina las fechas de los samples:
 
 ```powershell
-sqlcmd -S ".\SQLEXPRESS" -d IRouteCommerce -E -C -Q "DELETE FROM dbo.commerce WHERE pc_processdate BETWEEN '2026-11-01' AND '2026-11-09'; DELETE FROM dbo.commerce_quarantine WHERE pc_processdate BETWEEN '2026-11-01' AND '2026-11-09';"
+sqlcmd -S ".\SQLEXPRESS" -d IRouteCommerce -E -C -Q "DELETE FROM dbo.commerce WHERE pc_processdate BETWEEN '2026-11-01' AND '2026-11-09'; DELETE FROM dbo.commerce_quarantine WHERE pc_processdate BETWEEN '2026-11-01' AND '2026-11-09'; DELETE FROM dbo.commerce_uploads WHERE process_date BETWEEN '2026-11-01' AND '2026-11-09';"
 ```
 
 El script automático hace esta limpieza antes de probar, salvo que se use `-SkipReset`.
@@ -99,6 +102,9 @@ Además de los CSV, el runner comprueba casos que no dependen de un archivo de d
 | Tipo de contenido inválido en upload | `POST /api/commerce/upload` con `application/json` | `415` |
 | Archivo faltante | `POST /api/commerce/upload` multipart sin parte `file` | `400`, `Debes enviar un archivo CSV no vacío.` |
 | Archivo mayor a 20 MB | CSV temporal de 21 MB | `400`, `Request body too large.` |
+| Sin autenticación | `GET /api/commerce/quarantine` sin token | `401`, `No autorizado` |
+| Login inválido | `POST /api/auth/login` con contraseña incorrecta | `400`, `Usuario o contraseña inválidos.` |
+| CSV duplicado | Subir dos veces el mismo contenido | `409`, `El archivo ya fue cargado. No se insertaron registros duplicados.` |
 | Tipo de contenido inválido en process | `POST /api/commerce/process` con `text/plain` | `415` |
 | JSON malformado | `process-malformed.json` | `400` |
 | Búsqueda demasiado larga | `search` de 101 caracteres | `400` |
@@ -153,9 +159,11 @@ Si la API está en otro puerto:
 
 El script:
 
-- Limpia los datos de `2026-11-01` a `2026-11-09` (se puede omitir con `-SkipReset`).
+- Limpia los datos de `2026-11-01` a `2026-11-09`, incluyendo `commerce_uploads` (se puede omitir con `-SkipReset`).
 - Verifica que la API responda.
+- Inicia sesión con `admin` / `Admin123!` y comprueba credenciales inválidas, `401` y `429`.
 - Ejecuta los uploads, procesos y consultas.
+- Comprueba el `409` al subir dos veces el mismo CSV.
 - Comprueba estados HTTP, conteos, motivos, búsqueda, paginación, CORS e idempotencia.
 - Incluye casos de transporte: `405`, `413`, `415`, archivo faltante y JSON malformado.
 - Devuelve código de salida `1` si algún caso falla.
@@ -163,12 +171,19 @@ El script:
 ## 6. Comandos manuales
 
 ```powershell
+# Iniciar sesión
+$login = curl.exe -s -X POST "http://localhost:5238/api/auth/login" -H "Content-Type: application/json" --data-binary '{"username":"admin","password":"Admin123!"}' | ConvertFrom-Json
+$token = $login.accessToken
+
 # Subir un sample
-curl.exe -s -X POST "http://localhost:5238/api/commerce/upload" -F "file=@samples/upload/success/commerce_01112026.csv"
+curl.exe -s -X POST "http://localhost:5238/api/commerce/upload" -H "Authorization: Bearer $token" -F "file=@samples/upload/success/commerce_01112026.csv"
+
+# Repetir la carga: debe devolver 409
+curl.exe -s -X POST "http://localhost:5238/api/commerce/upload" -H "Authorization: Bearer $token" -F "file=@samples/upload/success/commerce_01112026.csv"
 
 # Procesar una fecha
-curl.exe -s -X POST "http://localhost:5238/api/commerce/process" -H "Content-Type: application/json" --data-binary "@samples/process/process-01112026.json"
+curl.exe -s -X POST "http://localhost:5238/api/commerce/process" -H "Authorization: Bearer $token" -H "Content-Type: application/json" --data-binary "@samples/process/process-01112026.json"
 
 # Consultar cuarentena
-curl.exe -s "http://localhost:5238/api/commerce/quarantine?processDate=2026-11-02&page=1&pageSize=10"
+curl.exe -s "http://localhost:5238/api/commerce/quarantine?processDate=2026-11-02&page=1&pageSize=10" -H "Authorization: Bearer $token"
 ```

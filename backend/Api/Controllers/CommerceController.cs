@@ -2,6 +2,7 @@ using IRoute.Api.Contracts;
 using IRoute.Application.Abstractions;
 using IRoute.Application.Commerce;
 using IRoute.Application.Quarantine;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,6 +12,7 @@ namespace IRoute.Api.Controllers;
 /// Carga, procesamiento y consulta de comercios.
 /// </summary>
 [ApiController]
+[Authorize]
 [Route("api/commerce")]
 [Tags("Commerce")]
 [Produces("application/json")]
@@ -30,6 +32,8 @@ public sealed class CommerceController(
     /// <param name="request">Formulario con el archivo CSV.</param>
     /// <response code="200">Archivo cargado correctamente.</response>
     /// <response code="400">Archivo inválido, vacío o con datos incorrectos.</response>
+    /// <response code="401">Token ausente o inválido.</response>
+    /// <response code="409">El archivo ya fue cargado anteriormente.</response>
     /// <response code="415">El contenido no es un formulario multipart.</response>
     /// <response code="500">Error interno del servidor.</response>
     [HttpPost("upload")]
@@ -38,6 +42,8 @@ public sealed class CommerceController(
     [RequestFormLimits(MultipartBodyLengthLimit = MaxFileSize)]
     [ProducesResponseType<UploadCommerceResult>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status415UnsupportedMediaType)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<UploadCommerceResult>> Upload(
@@ -73,12 +79,14 @@ public sealed class CommerceController(
     /// <param name="request">Datos del proceso.</param>
     /// <response code="200">Proceso ejecutado correctamente.</response>
     /// <response code="400">La fecha es obligatoria o tiene un formato inválido.</response>
+    /// <response code="401">Token ausente o inválido.</response>
     /// <response code="415">El contenido no es JSON.</response>
     /// <response code="500">Error interno del servidor.</response>
     [HttpPost("process")]
     [Consumes("application/json")]
     [ProducesResponseType<ProcessCommerceResult>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status415UnsupportedMediaType)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ProcessCommerceResult>> Process(
@@ -98,10 +106,12 @@ public sealed class CommerceController(
     /// <param name="request">Filtros, búsqueda y paginación.</param>
     /// <response code="200">Consulta ejecutada correctamente.</response>
     /// <response code="400">Los filtros o la paginación son inválidos.</response>
+    /// <response code="401">Token ausente o inválido.</response>
     /// <response code="500">Error interno del servidor.</response>
     [HttpGet("quarantine")]
     [ProducesResponseType<PagedResult<QuarantineItem>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<PagedResult<QuarantineItem>>> GetQuarantine(
         [FromQuery] GetQuarantineRequest request,
