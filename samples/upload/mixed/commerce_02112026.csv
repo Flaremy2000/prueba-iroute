@@ -1,0 +1,8 @@
+pc_nomcomred,pc_numdoc,pc_processdate
+Comercio Valido,20000001,2026-11-02
+,20000002,2026-11-02
+Comercio Sin Doc,,2026-11-02
+Comercio Con Letras,20AB02,2026-11-02
+Comercio Con Guion,20-002,2026-11-02
+   ,20000006,2026-11-02
+Comercio Valido Dos,20000007,2026-11-02
